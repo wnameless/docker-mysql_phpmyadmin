@@ -18,6 +18,7 @@ RUN apt-get install -y php5 libapache2-mod-php5 php5-mcrypt
 # Install phpMyAdmin
 RUN echo '#!/usr/bin/expect -f' >> install-phpmyadmin.sh
 RUN echo 'set timeout -1' >> install-phpmyadmin.sh
+RUN echo 'spawn apt-get install -y phpmyadmin' >> install-phpmyadmin.sh
 RUN echo 'expect "Configure database for phpmyadmin with dbconfig-common?"' >> install-phpmyadmin.sh
 RUN echo 'send "y\r"' >> install-phpmyadmin.sh
 RUN echo "expect \"Password of the database's administrative user:\"" >> install-phpmyadmin.sh

@@ -34,14 +34,30 @@ RUN mysqld & \
 	sleep 5; \
 	./install-phpmyadmin.sh; \
 	sleep 10; \
-	mysqladmin -u root shutdown
-
-RUN rm install-phpmyadmin.sh
+	mysqladmin -u root shutdown; \
+	rm install-phpmyadmin.sh
 
 RUN sed -i "s#// \$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#\$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#g" /etc/phpmyadmin/config.inc.php 
 
+# Install sshd &  set password 'admin'
+RUN apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+
+RUN echo '#!/usr/bin/expect -f' > passwd.sh; \
+	echo "spawn passwd" >> passwd.sh; \
+	echo "expect {" >> passwd.sh; \
+	echo "password: {send \"admin\r\" ; exp_continue}" >> passwd.sh; \
+	echo "eof exit" >> passwd.sh; \
+	echo "}" >> passwd.sh
+
+RUN chmod +x passwd.sh; \
+	./passwd.sh; \
+	rm passwd.sh
+
+EXPOSE 22
 EXPOSE 80
 EXPOSE 3306
 
-CMD service apache2 start; \
-	mysqld_safe
+CMD mysqld_safe & \
+	service apache2 start; \
+	/usr/sbin/sshd -D

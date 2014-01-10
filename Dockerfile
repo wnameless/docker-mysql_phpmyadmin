@@ -5,15 +5,30 @@ MAINTAINER Wei-Ming Wu <wnameless@gmail.com>
 RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
 RUN apt-get update
 
+# Install sshd
+RUN apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+
+# Install expect
+RUN apt-get install -y expect
+
+# Set password to 'admin'
+RUN echo '#!/usr/bin/expect -f' > passwd.sh; \
+	echo "spawn passwd" >> passwd.sh; \
+	echo "expect {" >> passwd.sh; \
+	echo "password: {send \"admin\r\" ; exp_continue}" >> passwd.sh; \
+	echo "eof exit" >> passwd.sh; \
+	echo "}" >> passwd.sh
+RUN chmod +x passwd.sh
+RUN ./passwd.sh; \
+	rm passwd.sh
+
 # Install MySQL
 RUN apt-get install -y mysql-server mysql-client libmysqlclient-dev
 # Install Apache
 RUN apt-get install -y apache2
 # Install php
 RUN apt-get install -y php5 libapache2-mod-php5 php5-mcrypt
-
-# Install expect
-RUN apt-get install -y expect
 
 # Install phpMyAdmin
 RUN echo '#!/usr/bin/expect -f' > install-phpmyadmin.sh; \
@@ -38,21 +53,6 @@ RUN mysqld & \
 	rm install-phpmyadmin.sh
 
 RUN sed -i "s#// \$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#\$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#g" /etc/phpmyadmin/config.inc.php 
-
-# Install sshd &  set password 'admin'
-RUN apt-get install -y openssh-server
-RUN mkdir /var/run/sshd
-
-RUN echo '#!/usr/bin/expect -f' > passwd.sh; \
-	echo "spawn passwd" >> passwd.sh; \
-	echo "expect {" >> passwd.sh; \
-	echo "password: {send \"admin\r\" ; exp_continue}" >> passwd.sh; \
-	echo "eof exit" >> passwd.sh; \
-	echo "}" >> passwd.sh
-
-RUN chmod +x passwd.sh; \
-	./passwd.sh; \
-	rm passwd.sh
 
 EXPOSE 22
 EXPOSE 80

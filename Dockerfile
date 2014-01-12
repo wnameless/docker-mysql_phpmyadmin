@@ -9,19 +9,8 @@ RUN apt-get update
 RUN apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
 
-# Install expect
-RUN apt-get install -y expect
-
 # Set password to 'admin'
-RUN echo '#!/usr/bin/expect -f' > passwd.sh; \
-	echo "spawn passwd" >> passwd.sh; \
-	echo "expect {" >> passwd.sh; \
-	echo "password: {send \"admin\r\" ; exp_continue}" >> passwd.sh; \
-	echo "eof exit" >> passwd.sh; \
-	echo "}" >> passwd.sh
-RUN chmod +x passwd.sh
-RUN ./passwd.sh; \
-	rm passwd.sh
+RUN printf admin\\nadmin\\n | passwd
 
 # Install MySQL
 RUN apt-get install -y mysql-server mysql-client libmysqlclient-dev
@@ -31,26 +20,12 @@ RUN apt-get install -y apache2
 RUN apt-get install -y php5 libapache2-mod-php5 php5-mcrypt
 
 # Install phpMyAdmin
-RUN echo '#!/usr/bin/expect -f' > install-phpmyadmin.sh; \
-	echo "set timeout -1" >> install-phpmyadmin.sh; \
-	echo "spawn apt-get install -y phpmyadmin" >> install-phpmyadmin.sh; \
-	echo "expect \"Configure database for phpmyadmin with dbconfig-common?\"" >> install-phpmyadmin.sh; \
-	echo "send \"y\r\"" >> install-phpmyadmin.sh; \
-	echo "expect \"Password of the database's administrative user:\"" >> install-phpmyadmin.sh; \
-	echo "send \"\r\"" >> install-phpmyadmin.sh; \
-	echo "expect \"MySQL application password for phpmyadmin:\"" >> install-phpmyadmin.sh; \
-	echo "send \"\r\"" >> install-phpmyadmin.sh; \
-	echo "expect \"Web server to reconfigure automatically:\"" >> install-phpmyadmin.sh; \
-	echo "send \"1\r\"" >> install-phpmyadmin.sh
-RUN chmod +x install-phpmyadmin.sh
-
 RUN mysqld & \
 	service apache2 start; \
 	sleep 5; \
-	./install-phpmyadmin.sh; \
+	printf y\\n\\n\\n1\\n | apt-get install -y phpmyadmin; \
 	sleep 10; \
-	mysqladmin -u root shutdown; \
-	rm install-phpmyadmin.sh
+	mysqladmin -u root shutdown;
 
 RUN sed -i "s#// \$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#\$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#g" /etc/phpmyadmin/config.inc.php 
 

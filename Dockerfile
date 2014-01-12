@@ -24,8 +24,8 @@ RUN mysqld & \
 	service apache2 start; \
 	sleep 5; \
 	printf y\\n\\n\\n1\\n | apt-get install -y phpmyadmin; \
-	sleep 10; \
-	mysqladmin -u root shutdown;
+	sleep 15; \
+	mysqladmin -u root shutdown
 
 RUN sed -i "s#// \$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#\$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = TRUE;#g" /etc/phpmyadmin/config.inc.php 
 
